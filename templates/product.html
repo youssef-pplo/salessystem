@@ -1,59 +1,51 @@
 <!doctype html>
-<html lang="en">
+<html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>Product Details</title>
+    <title>تفاصيل المنتج</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
-    <style>
-        body { background-color: #f8f9fa; }
-        .navbar { background-color: #007bff; }
-        .navbar-brand, .nav-link { color: white !important; }
-        .card { border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
-        .table thead { background-color: #007bff; color: white; }
-        h1, h2 { color: #343a40; }
-        .list-group-item { border-radius: 5px; margin-bottom: 5px; }
-    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
     <nav class="navbar navbar-expand-lg">
         <div class="container">
-            <a class="navbar-brand" href="/">Sales Dashboard</a>
+            <a class="navbar-brand" href="/">لوحة تحكم المبيعات</a>
             <div class="collapse navbar-collapse">
                 <ul class="navbar-nav ms-auto">
-                    <li class="nav-item"><a class="nav-link" href="/">Home</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/">الرئيسية</a></li>
                 </ul>
             </div>
         </div>
     </nav>
     <div class="container mt-4">
-        <h1><i class="bi bi-box me-2"></i>Product: {{ product.name }}</h1>
+        <h1><i class="bi bi-box me-2"></i>المنتج: {{ product.name }}</h1>
         <div class="card mb-4">
             <div class="card-body">
                 <div class="row">
                     <div class="col-md-6">
-                        <p><strong>Price:</strong> ${{ product.price | round(2) }}</p>
-                        <p><strong>Initial Stock:</strong> {{ product.initial_stock }}</p>
-                        <p><strong>Sold:</strong> {{ sold }}</p>
+                        <p><strong>السعر:</strong> {{ product.price | round(2) }} جنيه</p>
+                        <p><strong>المخزون الأولي:</strong> {{ product.initial_stock }}</p>
+                        <p><strong>المباع:</strong> {{ sold }}</p>
                     </div>
                     <div class="col-md-6">
-                        <p><strong>Remaining:</strong> {{ remaining }}</p>
-                        <p><strong>Revenue:</strong> ${{ revenue }}</p>
+                        <p><strong>المتبقي:</strong> {{ remaining }}</p>
+                        <p><strong>الإيرادات:</strong> {{ revenue }} جنيه</p>
                     </div>
                 </div>
             </div>
         </div>
 
-        <h2 class="mt-4"><i class="bi bi-cart-fill me-2"></i>Sales Related to This Product</h2>
+        <h2 class="mt-4"><i class="bi bi-cart-fill me-2"></i>المبيعات المتعلقة بهذا المنتج</h2>
         <div class="table-responsive">
             <table class="table table-striped table-hover">
                 <thead>
                     <tr>
-                        <th>Salesperson</th>
-                        <th>Client</th>
-                        <th>Quantity</th>
-                        <th>Date</th>
-                        <th>Total</th>
+                        <th>البائع</th>
+                        <th>العميل</th>
+                        <th>الكمية</th>
+                        <th>التاريخ</th>
+                        <th>الإجمالي</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -63,23 +55,76 @@
                         <td>{{ sale.client }}</td>
                         <td>{{ sale.quantity }}</td>
                         <td>{{ sale.date }}</td>
-                        <td>${{ sale.total | round(2) }}</td>
+                        <td>{{ sale.total | round(2) }} جنيه</td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
 
-        <h2 class="mt-4"><i class="bi bi-people me-2"></i>Salespeople Who Sold This Product</h2>
+        <h2 class="mt-4"><i class="bi bi-people me-2"></i>البائعون الذين باعوا هذا المنتج</h2>
         {% if salespeople_list %}
-        <ul class="list-group">
-            {% for salesperson in salespeople_list %}
-            <li class="list-group-item"><i class="bi bi-person-circle me-2"></i>{{ salesperson }}</li>
-            {% endfor %}
-        </ul>
+        <div class="mb-3">
+            <span class="ms-2">فرز حسب:</span>
+            <button class="btn btn-sm btn-outline-light" onclick="sortTable('salespeople-table', 0)">أبجدي</button>
+            <button class="btn btn-sm btn-outline-light" onclick="sortTable('salespeople-table', 1, 'desc')">الأكثر مبيعاً</button>
+            <button class="btn btn-sm btn-outline-light" onclick="sortTable('salespeople-table', 3, 'desc')">الأحدث (الأسرع)</button>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover" id="salespeople-table">
+                <thead>
+                    <tr>
+                        <th>البائع</th>
+                        <th>إجمالي الكمية المباعة</th>
+                        <th>إجمالي الإيرادات</th>
+                        <th style="display:none;">آخر تاريخ بيع</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for salesperson in salespeople_list %}
+                    <tr>
+                        <td><i class="bi bi-person-circle me-2"></i>{{ salesperson.name }}</td>
+                        <td>{{ salesperson.total_quantity }}</td>
+                        <td>{{ salesperson.total_revenue | round(2) }} جنيه</td>
+                        <td style="display:none;">{{ salesperson.last_sale_date }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
         {% else %}
-        <p class="alert alert-info">No salespeople have sold this product.</p>
+        <p class="alert alert-info">لم يقم أي بائع ببيع هذا المنتج.</p>
         {% endif %}
     </div>
+
+    <script>
+    function sortTable(tableId, columnIndex, order = 'asc') {
+        const table = document.getElementById(tableId);
+        const tbody = table.querySelector('tbody');
+        const rows = Array.from(tbody.querySelectorAll('tr'));
+
+        rows.sort((a, b) => {
+            const aCell = a.querySelectorAll('td')[columnIndex];
+            const bCell = b.querySelectorAll('td')[columnIndex];
+            const aText = aCell.textContent.trim();
+            const bText = bCell.textContent.trim();
+            
+            // For numeric sorting, remove non-numeric characters for comparison
+            const aVal = isNaN(parseFloat(aText)) ? aText.toLowerCase() : parseFloat(aText);
+            const bVal = isNaN(parseFloat(bText)) ? bText.toLowerCase() : parseFloat(bText);
+
+            if (aVal < bVal) {
+                return order === 'asc' ? -1 : 1;
+            }
+            if (aVal > bVal) {
+                return order === 'asc' ? 1 : -1;
+            }
+            return 0;
+        });
+
+        // Re-append rows to the tbody in sorted order
+        rows.forEach(row => tbody.appendChild(row));
+    }
+    </script>
 </body>
 </html>
